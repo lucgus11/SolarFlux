@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SolarFlux</title>
+<meta name="theme-color" content="#0a0a0f">
+<meta name="description" content="SolarFlux — Harmonisez énergie et eau en temps réel">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.svg">
+<link rel="apple-touch-icon" href="icons/icon-192.svg">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="aura" class="aura"></div>
+<canvas id="particles" class="particles"></canvas>
+
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span class="brand-name">SolarFlux</span>
+    </div>
+    <div class="topbar-actions">
+      <span id="connStatus" class="status-chip status-off">● hors ligne</span>
+      <button id="btnSettings" class="icon-btn" aria-label="Paramètres">⚙</button>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- Compteur central -->
+    <section class="card glass hero-card">
+      <div class="hero-label" id="heroLabel">Solde en temps réel</div>
+      <div class="hero-value" id="heroValue">0,00 €</div>
+      <div class="hero-sub" id="heroSub">En attente de données…</div>
+
+      <div class="zen-score">
+        <svg viewBox="0 0 120 120" class="zen-ring">
+          <circle cx="60" cy="60" r="52" class="zen-ring-bg"/>
+          <circle cx="60" cy="60" r="52" class="zen-ring-fg" id="zenRingFg"/>
+        </svg>
+        <div class="zen-score-text">
+          <span id="zenScoreValue">--</span>
+          <small>Zen-Score</small>
+        </div>
+      </div>
+    </section>
+
+    <!-- Flux temps réel -->
+    <section class="grid-3">
+      <div class="card glass metric-card">
+        <div class="metric-icon">☀️</div>
+        <div class="metric-label">Production solaire</div>
+        <div class="metric-value" id="valProd">-- W</div>
+      </div>
+      <div class="card glass metric-card">
+        <div class="metric-icon">⚡</div>
+        <div class="metric-label">Consommation</div>
+        <div class="metric-value" id="valCons">-- W</div>
+      </div>
+      <div class="card glass metric-card">
+        <div class="metric-icon">🔌</div>
+        <div class="metric-label">Prises connectées</div>
+        <div class="metric-value" id="valSockets">-- W</div>
+      </div>
+    </section>
+
+    <!-- Eau + Météo -->
+    <section class="grid-2">
+      <div class="card glass water-card">
+        <div class="card-title">Consommation d'eau du jour</div>
+        <div class="drop-wrap">
+          <svg viewBox="0 0 100 130" class="drop-svg">
+            <defs>
+              <clipPath id="dropClip">
+                <path d="M50 4 C50 4 90 55 90 85 A40 40 0 1 1 10 85 C10 55 50 4 50 4 Z"/>
+              </clipPath>
+              <linearGradient id="waterGrad" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0%" stop-color="#3fd0ff"/>
+                <stop offset="100%" stop-color="#7be0ff"/>
+              </linearGradient>
+            </defs>
+            <path d="M50 4 C50 4 90 55 90 85 A40 40 0 1 1 10 85 C10 55 50 4 50 4 Z" class="drop-outline"/>
+            <rect id="waterFill" x="0" y="130" width="100" height="130" fill="url(#waterGrad)" clip-path="url(#dropClip)"/>
+          </svg>
+        </div>
+        <div class="water-value"><span id="valWater">--</span> L</div>
+        <div class="water-flow">Débit : <span id="valFlow">--</span> L/min</div>
+      </div>
+
+      <div class="card glass weather-card">
+        <div class="card-title">Prévisions solaires</div>
+        <div id="weatherForecast" class="forecast-row">
+          <div class="forecast-empty">Chargement…</div>
+        </div>
+        <div class="weather-tip" id="weatherTip">—</div>
+      </div>
+    </section>
+
+    <!-- Historique -->
+    <section class="card glass history-card">
+      <div class="card-title">Tendance du jour</div>
+      <canvas id="historyChart" class="history-canvas"></canvas>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <span>SolarFlux · données locales uniquement</span>
+  </footer>
+</div>
+
+<!-- Panneau Paramètres -->
+<div id="settingsPanel" class="settings-overlay hidden">
+  <div class="settings-panel glass">
+    <div class="settings-header">
+      <h2>Paramètres</h2>
+      <button id="btnCloseSettings" class="icon-btn">✕</button>
+    </div>
+
+    <div class="settings-body">
+      <h3>Compteur P1 (Electricity)</h3>
+      <label>Adresse IP locale</label>
+      <input type="text" id="ipP1" placeholder="ex: 192.168.1.20">
+
+      <h3>Energy Socket(s)</h3>
+      <label>Adresse(s) IP (séparées par une virgule)</label>
+      <input type="text" id="ipSockets" placeholder="ex: 192.168.1.21,192.168.1.22">
+
+      <h3>Compteur d'eau</h3>
+      <label>Adresse IP locale</label>
+      <input type="text" id="ipWater" placeholder="ex: 192.168.1.23">
+
+      <h3>Météo (Open-Meteo)</h3>
+      <label>Latitude</label>
+      <input type="text" id="lat" placeholder="ex: 50.6326">
+      <label>Longitude</label>
+      <input type="text" id="lon" placeholder="ex: 5.5372">
+
+      <h3>Tarif électricité</h3>
+      <label>Prix achat (€/kWh)</label>
+      <input type="text" id="priceBuy" placeholder="ex: 0.32">
+      <label>Prix vente / valorisation (€/kWh)</label>
+      <input type="text" id="priceSell" placeholder="ex: 0.06">
+
+      <h3>Notifications</h3>
+      <button id="btnEnableNotif" class="btn-secondary">Activer les notifications</button>
+
+      <p class="settings-note">
+        Toutes ces informations restent stockées uniquement dans le navigateur (localStorage). Aucune donnée n'est envoyée vers un serveur externe.
+      </p>
+
+      <button id="btnSaveSettings" class="btn-primary">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/homewizard.js"></script>
+<script src="js/weather.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/particles.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
